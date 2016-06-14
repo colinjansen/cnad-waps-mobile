@@ -3,7 +3,7 @@
 // ============================================================================
 
 var _service_root      = 'http://waps.commissionaires.ab.ca/';
-var _version           = '1.2.7';
+var _version           = '1.2.8';
 var _button_reference  = null;
 
 function splash_timer()
@@ -28,18 +28,18 @@ function start_the_app()
     security_check(splash_timer, function() {
         console.log('security check failed');
     });
-	
+
 	window.plugins.insomnia.keepAwake();
-	
+
 	if ('' == WAPS.worker_phone)
 	{
 		window.plugins.sim.getSimInfo(
 			function(result) {
 				WAPS.worker_phone = result.phoneNumber.substr(result.phoneNumber.length - 10);
 				Settings.save({'worker_phone' : WAPS.worker_phone});
-				
+
 				$('#phone_number').val(Utils.Format.toPhoneNumber(WAPS.worker_phone));
-			}, 
+			},
 			function(error) {
 				console.log(error);
 			}
@@ -162,7 +162,7 @@ $(document).bind('ready_state', function(e, log_buffer) {
 	$('#end_mon_confirm').off('click').on('click', function(event, ui) {
 		_button_reference = $('#end_mon_cancel');
 		UI.disableButton(_button_reference);
-		
+
 		WAPS.call('getworkerpin', [WAPS.worker_id], function(result) {
 			// false would mean that the PIN could not be retrieved
 			if (true != result.success) {
@@ -186,7 +186,7 @@ $(document).bind('ready_state', function(e, log_buffer) {
 			});
 		});
 	});
-	
+
 	$('#end_mon_cancel').off('click').on('click', function(event, ui) {
 		$('#security_check_pin').val('');
 		$.mobile.changePage('#main_page',{
@@ -194,7 +194,7 @@ $(document).bind('ready_state', function(e, log_buffer) {
 			changeHash : false
 		});
 	});
-	
+
 	$('a#mon_emergency').off('click').on('click', function(event, ui) {
 		_button_reference = $('a#emergency');
 		UI.disableButton(_button_reference);
@@ -316,7 +316,7 @@ $(document).bind('ready_state', function(e, log_buffer) {
 
 var TimedProcedure = function(name, interval, action) {
     return {
-        last_run: 0,
+        last_run: Date.now(),
         name: name,
         interval: interval,
         action: action
@@ -341,13 +341,13 @@ var WAPS = {
 	worker_id      : null,
 	worker_pin     : null,
 	worker_phone   : null,
-	
+
 	status : null,
 	callback_timestamp : 0,
 	callback_minutes : 15,
     warning_minutes : 2,
 	callback_number : '',
-	
+
 	_auth_hash      : null,
 	_post_data      : null,
     _annoying_alarm : null,
@@ -372,6 +372,7 @@ var WAPS = {
 
                 if (last_run < warning_timestamp && warning_timestamp < now)
                 {
+					console.log(last_run, warning_timestamp, now);
                     WAPS.annoy();
                 }
             }
@@ -381,7 +382,7 @@ var WAPS = {
 // ============================================================================
 //  Public Methods
 // ============================================================================
-	
+
 	/**
 	 *
 	*/
@@ -503,7 +504,7 @@ var WAPS = {
 		UI.buttonHide($('#mon_start, #mon_update, #mon_end'));
         WAPS.resetTimedStuff();
 	},
-	
+
 	updateAudioPageUI: function()
     {
 		UI.disableButton($('#play_name'));
@@ -521,7 +522,7 @@ var WAPS = {
 			}
 		});
 	},
-	
+
 	updateStatusScreen: function()
     {
         WAPS._getCurrentMonitoringStatus(function()
@@ -565,7 +566,7 @@ var WAPS = {
         clearTimeout(WAPS._timer);
         WAPS.timedProcedures.forEach(function(procedure)
         {
-            procedure.last_run = 0;
+            procedure.last_run = Date.now();
         });
         WAPS.doTimedStuff();
     },
@@ -578,16 +579,16 @@ var WAPS = {
         {
             if (now - procedure.last_run >= procedure.interval)
             {
-                var last_run = procedure.last_run;
-                procedure.last_run = now;
-
-                async(function() { procedure.action(now, last_run); });
+                async(function() {
+					procedure.action(now, procedure.last_run);
+	                procedure.last_run = now;
+				});
             }
         });
 
         WAPS._timer = setTimeout(function() { WAPS.doTimedStuff(); }, 200);
     },
-	
+
 	updateCallbackTimeRemaining: function()
     {
 		var timestamp = parseInt(WAPS.callback_timestamp) - Date.now();
@@ -620,12 +621,12 @@ var WAPS = {
                 return '<span style="color:#333333;">unkown</span>';
         }
     },
-	
+
 // ============================================================================
 //  Private Methods
 // ============================================================================
 
-	
+
 	_getCurrentMonitoringStatus: function(callback)
     {
 		// get the latest user status
@@ -643,7 +644,7 @@ var WAPS = {
 
 			// current monitoring status
 			WAPS.status = Utils.Clean.getInteger(result.value.status_id);
-			
+
 			// the callback number
 			var callback_number = Utils.Clean.stripNonNumeric(result.value.callback_number);
 
@@ -657,17 +658,17 @@ var WAPS = {
 					Utils.Log.debug('!!! callback number has been updated.');
 				}
 			}
-			
+
 			// set the callback time (it comes from the server in seconds)
 			WAPS.callback_timestamp = Utils.Clean.getInteger(result.value.callback_timestamp) * 1000;
-			
+
 			if (undefined != callback)
             {
                 callback();
             }
 		}, null, true);
 	},
-	
+
 	call: function(service, args, success, fail, nolog)
     {
 		// if we don't know where to send it
@@ -702,7 +703,7 @@ var WAPS = {
 
 				// make sure any disabled buttons are enabled
 				UI.enableButton(_button_reference);
-				
+
 				if (obj.hasOwnProperty('result')) {
 					if (success) {
 						success(obj.result);
@@ -720,17 +721,17 @@ var WAPS = {
 				WAPS._post_data = null;
 				// make sure any disabled buttons are enabled
 				UI.enableButton(_button_reference);
-				
+
 				WAPS._handleError(status + errorThrown, fail);
 			}
 		});
 	},
-	
+
 	_handleServiceException: function(exception, callback) {
 		Utils.Log.error(exception.message);
 		if (callback) callback();
 	},
-	
+
 	_handleError: function(message, callback) {
 		Utils.Log.error(message);
 		if (callback) callback();
