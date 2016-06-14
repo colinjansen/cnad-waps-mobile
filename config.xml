@@ -22,6 +22,7 @@
     <icon src="res/icon.png" />
     <platform name="android">
         <splash src="res/splash.png" />
+		<hook type="after_build" src="res/scripts/android_post_build.bat" />
     </platform>
     <access origin="*" />
     <plugin name="cordova-plugin-whitelist" spec="1" />
