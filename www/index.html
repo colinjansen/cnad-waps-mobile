@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+		
+		<link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.3.0.min.css" />
+		<link rel="stylesheet" type="text/css" href="css/wapsmobile/wapsmobile.min.css" />
+        <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+		<script type="text/javascript">
+
+var cordovaReady = $.Deferred();
+var jqmReady     = $.Deferred();
+var log_buffer   = [];
+
+$.when(cordovaReady, jqmReady).done(function() {
+    log_buffer.push('scripts loaded');
+    $(document).trigger('ready_state', [log_buffer]);
+});
+
+var mobile_device_ready = function() {
+    log_buffer.push('phonegap / cordova loaded');
+    cordovaReady.resolve();
+}
+
+var jquery_mobile_ready = function () {
+    log_buffer.push('jquery mobile loaded');
+    $.support.cors = true;
+    $.mobile.allowCrossDomainPages = true;
+    $.mobile.defaultPageTransition = 'none';
+    jqmReady.resolve();
+}
+
+var document_ready = function() {
+    log_buffer.push('document loaded');
+    cordovaReady.resolve();
+}
+
+log_buffer.push(navigator.userAgent);
+
+$(document).bind('mobileinit', jquery_mobile_ready);
+
+		</script>
+        <script type="text/javascript" src="js/jquery.mobile-1.3.1.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/utils.js"></script>
+        <script type="text/javascript" src="js/waps.js"></script>
+        <script>
+if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
+    $(document).bind('deviceready', mobile_device_ready);
+} else {
+    $(document).ready(document_ready);
+}
+        </script>
+		<style>
+		.field_label { text-align:right; padding-right:10px; color:#666666; }
+		.field_value { text-align:left; font-weight:bold; }
+		a.record_button { width:50%; }
+		a.play_button { width:40%; }
+		.ui-controlgroup-horizontal .ui-controlgroup-controls { display: block !important; }
+        hr { color: #666666; background-color: #666666; border-color: #666666; }
+        .dim { color:#666666; }
+        .progressbarframe { position:relative; width:100%; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+        .progressbarinternal { background-color: #B4F5B4; width:0; height:10px; border-radius: 3px; }
+        .bigfont { font-size: 100%; }
+        .smallfont { font-size:80%; color:#999999; }
+        .loading { width:128px; height:15px; background:url('loading.gif'); margin:20px auto; }
+		</style>
+		
+    </head>
+        <title>WAPS Mobile</title>
+    <body>
+
+        <div id="splash_page" data-role="page" data-theme="a">
+            <div data-role="content">
+                <table style="width:100%; height:100%;">
+                    <tr>
+                        <td style="width:100%; height:400px; text-align: center; vertical-align: middle;" >
+                            <span style="color:#0077bb">waps</span>
+                            <span style="color:#00bb33">mobile</span>
+                            <div class="loading"></div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+		
+			<div data-role="dialog" id="enter_pin" data-theme="a">
+				<div data-role="header">
+					<h1>End Monitoring</h1>
+				</div>
+				<div data-role="content">
+					<p class="smallfont">
+					Please enter your PIN number in order to end system monitoring.
+					</p>
+					<div data-role="fieldcontain" class="ui-hide-label">
+						<label for="security_check_pin">PIN:</label>
+						<input type="tel" name="security_check_pin" id="security_check_pin" value="" placeholder="Enter PIN"/>
+					</div>
+				</div>
+				<div data-role="footer" data-position="fixed" class="ui-bar">
+					<div class="ui-grid-a">
+						<div class="ui-block-a">
+							<input id="end_mon_cancel" type="button" value="Cancel" data-theme="b" data-icon="delete" />
+						</div>
+						<div class="ui-block-b">
+							<input id="end_mon_confirm" type="button" value="End" data-theme="d" data-icon="alert" />
+						</div>
+					</div>
+				</div>
+			</div>
+
+			
+		<div id="login_page" data-role="page" data-theme="a">
+			<div data-role="header">
+				<h1>WAPS | Login</h1>
+			</div>
+			<div data-role="content">  
+				<div data-role="fieldcontain" class="ui-hide-label">
+					<label for="phone_number">Device ID</label>
+					<input type="tel" name="phone_number" id="phone_number" value="" placeholder="Enter Device ID (Phone Number)"/>
+				</div>
+				<div data-role="fieldcontain" class="ui-hide-label">
+					<label for="pin">PIN:</label>
+					<input type="tel" name="pin" id="pin" value="" placeholder="Enter PIN"/>
+				</div>
+				<a href="#" id="login" data-role="button" data-theme="c" data-icon="forward">Login</a>	
+			</div>
+			<div data-role="footer" data-position="fixed" class="ui-bar">
+				<div style="padding-left:10px;">
+                    <span id="app_version"></span> <span id="cor_version"></span>
+				</div>
+				<div class="ui-grid-a">
+					<div class="ui-block-a" style="width:25%">
+						<a href="#console_page" id="console_button" data-role="button" data-theme="a" data-icon="gear">Con</a>
+					</div>
+					<div class="ui-block-b" style="width:72%">
+						<input type="text" name="root" id="root" value="" placeholder="Enter App Root" />
+					</div>
+				</div>
+			</div> 
+		</div>
+		
+		<div id="main_page" data-role="page" data-theme="a">
+			<div data-role="header">
+				<h1>WAPS</h1>
+				<div data-role="navbar">
+					<ul>
+						<li><a href="#main_page" data-icon="home">Monitoring</a></li>
+						<li><a href="#audio_page" data-icon="star">Audio</a></li>
+						<li><a href="#setup_page" data-icon="gear">Setup</a></li>
+					</ul>
+				</div>
+			</div>
+			
+			<div data-role="content">
+				<table class="bigfont">
+					<tr>
+						<td class="field_label">status:</td>
+						<td class="field_value"><div id="current_status"></div></td>
+					</tr>
+					<tr>
+						<td class="field_label">callback time:</td>
+						<td class="field_value"><div id="cb_time"></div></td>
+					</tr>
+					<tr>
+						<td class="field_label">callback number:</td>
+						<td class="field_value"><div id="cb_number"></div></td>
+					</tr>
+					<tr>
+						<td class="field_label">remaining:</td>
+						<td class="field_value"><div id="remaining"></div></td>
+					</tr>
+				</table>
+                <hr />
+				<a href="#" id="mon_update" data-role="button" data-theme="b" data-icon="check">Check In</a>
+				<a href="#" id="mon_start" data-role="button" data-theme="b" data-icon="plus">Start</a>
+			</div>
+			
+			<div data-role="footer" data-position="fixed" class="ui-bar">
+				<div class="ui-grid-a">
+					<div class="ui-block-a">
+						<a href="#" id="mon_end" data-role="button" data-theme="d" data-icon="delete">End Monitoring</a>
+					</div>
+					<div class="ui-block-b">
+						<a href="#" id="mon_emergency" data-role="button" data-theme="f" data-icon="alert">Alarm</a>
+					</div>
+				</div>
+			</div> 
+		</div>
+		
+		<div id="audio_page" data-role="page" data-theme="a">
+			<div data-role="header">
+				<h1>WAPS | Audio</h1>
+				<div data-role="navbar">
+					<ul>
+						<li><a href="#main_page" data-icon="home">Monitoring</a></li>
+						<li><a href="#audio_page" data-icon="star">Audio</a></li>
+						<li><a href="#setup_page" data-icon="gear">Setup</a></li>
+					</ul>
+				</div>
+			</div>
+			
+			<div data-role="content">  
+				<p class="smallfont">
+				Your name recording shows up when you call into the system. It is used to identify you.
+				</p>
+				<div data-role="controlgroup" data-type="horizontal">
+					<a class="record_button" href="#" id="record_name" data-role="button" data-theme="c">record name</a>
+					<a class="play_button" href="#" id="play_name" data-role="button" data-theme="b" data-icon="arrow-r" data-iconpos="right">play</a>
+				</div>
+				<p class="smallfont">
+				The message recording can be played back by monitoring personnel so that they will know what your most recent activities are.
+				</p>
+				<div data-role="controlgroup" data-type="horizontal">
+					<a class="record_button" href="#" id="record_message" data-role="button" data-theme="c">record message</a>
+					<a class="play_button" href="#" id="play_message" data-role="button" data-theme="b" data-icon="arrow-r" data-iconpos="right">play</a>
+				</div>
+                <div class="progressbar" style="display:none;">
+                    <span class="smallfont">playing...</span>
+                    <div class="progressbarframe">
+                        <div class="progressbarinternal"></div>
+                    </div>
+                </div>
+			</div>
+			
+			<div data-role="footer" data-position="fixed" class="ui-bar">
+				<div class="ui-grid-b">
+					<div class="ui-block-a">
+						<a href="#console_page" id="console_button" data-role="button" data-theme="a" data-icon="gear">Console</a>
+					</div>
+					<div class="ui-block-b">
+						<a href="#" id="logout" data-role="button" data-theme="e" data-icon="back">Log Out</a>
+					</div>
+					<div class="ui-block-c">
+						<a href="#" id="mon_emergency" data-role="button" data-theme="f" data-icon="alert">Alarm</a>
+					</div>
+				</div>
+			</div> 
+		</div>
+		
+		<div id="setup_page" data-role="page" data-theme="a">
+			<div data-role="header">
+				<h1>WAPS | Setup</h1>
+				<div data-role="navbar">
+					<ul>
+						<li><a href="#main_page" data-icon="home">Monitoring</a></li>
+						<li><a href="#audio_page" data-icon="star">Audio</a></li>
+						<li><a href="#setup_page" data-icon="gear">Setup</a></li>
+					</ul>
+				</div>
+			</div>
+			
+			<div data-role="content">  
+				<div data-role="fieldcontain">
+					<p class="smallfont">
+						This setting controls how many minutes between system callbacks. This number
+						is used when starting or updating system monitoring.
+					</p>
+					<input type="range" name="callback_minutes" id="callback_minutes" value="15" min="2" max="480" data-theme="a" />
+
+                    <p class="smallfont">
+                        How many minutes before monitoring ends to sound a notification.
+                    </p>
+                    <input type="range" name="warning_minutes" id="warning_minutes" value="2" min="2" max="30" data-theme="a" />
+
+					<p class="smallfont">
+						The phone number that will be called when the system performs a callback. This phone number
+						is used when starting or updating system monitoring.
+					</p>
+					<input type="tel" name="callback_number" id="callback_number" value="" placeholder="Enter Callback Phone Number"/>
+				</div>
+			</div>
+			
+			<div data-role="footer" data-position="fixed" class="ui-bar">
+				<div class="ui-grid-b">
+					<div class="ui-block-a">
+						<a href="#console_page" id="console_button" data-role="button" data-theme="a" data-icon="gear">Console</a>
+					</div>
+					<div class="ui-block-b">
+						<a href="#" id="logout" data-role="button" data-theme="e" data-icon="back">Log Out</a>
+					</div>
+					<div class="ui-block-c">
+						<a href="#" id="mon_emergency" data-role="button" data-theme="f" data-icon="alert">Alarm</a>
+					</div>
+				</div>
+			</div> 
+		</div>
+		
+		<div id="console_page" data-role="page" data-theme="a">
+			<div data-role="content">
+				<div id="console_area"></div>
+			</div>
+			<div data-role="footer" data-position="fixed" class="ui-bar">
+				<a href="#" data-rel="back" data-icon="back">Back</a>
+			</div>
+		</div>
+		
+    </body>
+</html>
