@@ -347,6 +347,7 @@ var WAPS = {
 	callback_minutes : 15,
     warning_minutes : 2,
 	callback_number : '',
+    shift_end_timestamp : 0,
 
 	_auth_hash      : null,
 	_post_data      : null,
@@ -547,6 +548,7 @@ var WAPS = {
                 case WAPS.STATUS_GRACE:         // user missed the first check in time
                 case WAPS.STATUS_AUTO_CALLBACK: // monitoring started automatically
                     UI.buttonShow($('#mon_update, #mon_end, #mon_emergency'));
+                    WAPS._getEndOfShiftTimestampFromServer();
                 case WAPS.STATUS_EMERGENCY:     // user missed the second check in time
                 case WAPS.STATUS_ACKNOWLEDGED:  // monitoring center has acknowledged an emergency
                 case WAPS.STATUS_SILENT_ALARM:  // user initiated emergency
@@ -592,10 +594,12 @@ var WAPS = {
 	updateCallbackTimeRemaining: function()
     {
 		var timestamp = parseInt(WAPS.callback_timestamp) - Date.now();
-
         timestamp = (isNaN(timestamp) || 0 > timestamp) ? 0 : timestamp;
-
         $('#remaining').html(Utils.Format.span(timestamp));
+
+        var end_of_shift = parseInt(WAPS.shift_end_timestamp) - Date.now();
+        end_of_shift = (isNaN(end_of_shift) || 0 > end_of_shift) ? 0 : end_of_shift;
+        $('#se_time').html(Utils.Format.span(end_of_shift));
 	},
 
     getStatusString: function(status_id)
@@ -626,6 +630,29 @@ var WAPS = {
 //  Private Methods
 // ============================================================================
 
+
+    _getEndOfShiftTimestampFromServer: function(callback)
+    {
+        WAPS.call('getEndOfShift', [WAPS.worker_id], function(result) {
+
+            // if we got a usable result back
+            if (true != result.success)
+            {
+                WAPS._handleError('getEndOfShift() - failed to load');
+
+                if (undefined != callback) callback();
+
+                return;
+            }
+
+            WAPS.shift_end_timestamp = Utils.Clean.getInteger(result.value) * 1000;
+
+            if (undefined != callback)
+            {
+                callback();
+            }
+        }, null, true);
+    },
 
 	_getCurrentMonitoringStatus: function(callback)
     {
