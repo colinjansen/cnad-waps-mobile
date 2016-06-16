@@ -343,6 +343,7 @@ var WAPS = {
 	worker_phone   : null,
 
 	status : null,
+    old_status : null,
 	callback_timestamp : 0,
 	callback_minutes : 15,
     warning_minutes : 2,
@@ -471,6 +472,25 @@ var WAPS = {
         navigator.vibrate(2000);
     },
 
+    endOfShiftNotification: function()
+    {
+        navigator.notification.confirm('Your shift has ended. Please end monitoring before the grace time run out.', function(buttonIndex)
+        {
+            WAPS.releaseAnnoyingAlarmMedia();
+
+            if (1 == buttonIndex)
+            {
+                // get the user to enter their PIN
+                $.mobile.changePage("#enter_pin");
+            }
+
+        }, 'End of Shift', ['End Monitoring', 'Dismiss']);
+
+        WAPS.playAnnoyingAlarmMedia();
+
+        navigator.vibrate(2000);
+    },
+
     releaseAnnoyingAlarmMedia: function()
     {
         if (null != WAPS._annoying_alarm)
@@ -543,12 +563,19 @@ var WAPS = {
                     break;
                 case WAPS.STATUS_AUTO_CHECKOUT: // auto-monitoring is about to end
                     UI.buttonShow($('#mon_end, #mon_emergency'));
+                    if (WAPS.old_status != WAPS.STATUS_AUTO_CHECKOUT)
+                    {
+                        WAPS.old_status = WAPS.STATUS_AUTO_CHECKOUT;
+
+                        WAPS.endOfShiftNotification();
+                    }
                     break;
                 case WAPS.STATUS_CALLBACK:      // user is active and set to callback
                 case WAPS.STATUS_GRACE:         // user missed the first check in time
                 case WAPS.STATUS_AUTO_CALLBACK: // monitoring started automatically
                     UI.buttonShow($('#mon_update, #mon_end, #mon_emergency'));
                     WAPS._getEndOfShiftTimestampFromServer();
+                    break;
                 case WAPS.STATUS_EMERGENCY:     // user missed the second check in time
                 case WAPS.STATUS_ACKNOWLEDGED:  // monitoring center has acknowledged an emergency
                 case WAPS.STATUS_SILENT_ALARM:  // user initiated emergency
@@ -668,6 +695,9 @@ var WAPS = {
 
 				return;
 			}
+
+            // remember the old status
+            WAPS.old_status = WAPS.status;
 
 			// current monitoring status
 			WAPS.status = Utils.Clean.getInteger(result.value.status_id);
