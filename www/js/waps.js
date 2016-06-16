@@ -3,7 +3,7 @@
 // ============================================================================
 
 var _service_root      = 'http://waps.commissionaires.ab.ca/';
-var _version           = '1.2.8';
+var _version           = '1.2.9';
 var _button_reference  = null;
 
 function splash_timer()
